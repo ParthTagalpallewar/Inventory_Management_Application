@@ -43,8 +43,9 @@ class DatabaseHelper {
       purchase_price REAL NOT NULL,
       distributor_name TEXT NOT NULL,
       quantity INTEGER NOT NULL,
+      purchase_date TEXT NOT NULL,
       FOREIGN KEY (product_id) REFERENCES products(product_id) ON DELETE CASCADE
-    )
+    );
   ''');
 
     await db.execute('''
