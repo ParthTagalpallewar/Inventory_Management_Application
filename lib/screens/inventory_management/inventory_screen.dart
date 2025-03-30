@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:get/get_core/src/get_main.dart';
 import 'package:inventory_management_software/res/colors.dart';
 import 'package:inventory_management_software/screens/app_drawer.dart';
+import 'package:get/get_navigation/get_navigation.dart';
+import 'package:inventory_management_software/screens/inventory_management/product_screen.dart';
+import 'package:inventory_management_software/screens/inventory_management/purchases.dart';
 
 class InventoryScreen extends StatelessWidget {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
@@ -20,15 +24,15 @@ class InventoryScreen extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: () {
-              _showCreateProductDialog(context);
+              Get.to(() => ProductScreen());
             },
             child: const Text('Create Product', style: TextStyle(color: Colors.white)),
           ),
           TextButton(
             onPressed: () {
-              // Handle Add Product action
+              Get.to(() => PurchasesScreen());
             },
-            child: const Text('Add Product', style: TextStyle(color: Colors.white)),
+            child: const Text('Purchases', style: TextStyle(color: Colors.white)),
           ),
         ],
       ),
@@ -42,42 +46,5 @@ class InventoryScreen extends StatelessWidget {
     );
   }
 
-  void _showCreateProductDialog(BuildContext context) {
-    TextEditingController productController = TextEditingController();
 
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Create Product'),
-          content: TextField(
-            controller: productController,
-            decoration: const InputDecoration(
-              hintText: 'Enter product name',
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context); // Close dialog
-              },
-              child: const Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () {
-                String productName = productController.text.trim();
-                if (productName.isNotEmpty) {
-
-                  
-
-                  Navigator.pop(context); // Close dialog
-                }
-              },
-              child: const Text('Create'),
-            ),
-          ],
-        );
-      },
-    );
-  }
 }
