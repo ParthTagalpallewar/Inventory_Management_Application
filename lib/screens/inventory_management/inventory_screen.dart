@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:inventory_management_software/res/colors.dart';
 import 'package:inventory_management_software/screens/app_drawer.dart';
 import 'package:inventory_management_software/screens/inventory_management/product_screen.dart';
 import 'package:inventory_management_software/screens/inventory_management/purchases.dart';
@@ -32,6 +31,7 @@ class _InventoryScreenState extends State<InventoryScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.black,
       key: _scaffoldKey,
       appBar: AppBar(
         title: const Text('Inventory Management'),
@@ -58,14 +58,13 @@ class _InventoryScreenState extends State<InventoryScreen> {
         ],
       ),
       drawer: AppDrawer(),
-      backgroundColor: Colors.black, // Set background color to black
       body: Column(
         children: [
           // Header row with column titles
           Container(
             padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 15),
             color: Colors.grey[850], // Dark grey for header
-            child: Row(
+            child: const Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: const [
                 Expanded(child: Text("Product Name", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold))),
@@ -73,7 +72,6 @@ class _InventoryScreenState extends State<InventoryScreen> {
               ],
             ),
           ),
-
           // Inventory list or "No inventory" message
           Expanded(
             child: _inventoryList.isEmpty

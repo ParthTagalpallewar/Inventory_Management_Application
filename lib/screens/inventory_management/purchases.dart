@@ -10,6 +10,11 @@ class PurchasesScreen extends StatefulWidget {
 class _PurchasesScreenState extends State<PurchasesScreen> {
   final InventoryDao _inventoryDao = InventoryDao();
   List<Map<String, dynamic>> _purchases = [];
+  bool _isSearching = false;
+  TextEditingController _searchController = TextEditingController();
+
+
+  String? dbPath;
 
   @override
   void initState() {
@@ -17,14 +22,19 @@ class _PurchasesScreenState extends State<PurchasesScreen> {
     _fetchPurchases();
   }
 
-  /// ✅ Fetch purchases from DB
-  Future<void> _fetchPurchases() async {
-    List<Map<String, dynamic>> purchases = await _inventoryDao
-        .getPurchasesWithProductName();
+  Future<void> _fetchPurchases({String? query}) async {
+    List<Map<String, dynamic>> purchases;
+    if (query == null || query.isEmpty) {
+      purchases = await _inventoryDao.getPurchasesWithProductName();
+    } else {
+      purchases = await _inventoryDao.getPurchasesWithProductNameFiltered(query);
+    }
+
     setState(() {
       _purchases = purchases;
     });
   }
+
 
   void _showAddPurchaseDialog() {
     String? selectedProductId;
@@ -37,7 +47,7 @@ class _PurchasesScreenState extends State<PurchasesScreen> {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Text("Add Purchase"),
+          title: const Text("Add Purchase"),
           backgroundColor: Colors.black,
           content: StatefulBuilder(
             builder: (context, setState) {
@@ -49,7 +59,7 @@ class _PurchasesScreenState extends State<PurchasesScreen> {
                     future: _inventoryDao.getProducts(),
                     builder: (context, snapshot) {
                       if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                        return Text("No Products Available", style: TextStyle(
+                        return const Text("No Products Available", style: TextStyle(
                             color: Colors.white));
                       }
                       return DropdownButtonFormField<String>(
@@ -97,7 +107,7 @@ class _PurchasesScreenState extends State<PurchasesScreen> {
                           borderRadius: BorderRadius.circular(7)),
                     ),
                   ),
-                  SizedBox(height: 10),
+                  const SizedBox(height: 10),
                   TextField(
                     controller: quantityController,
                     keyboardType: TextInputType.number,
@@ -109,7 +119,7 @@ class _PurchasesScreenState extends State<PurchasesScreen> {
                           borderRadius: BorderRadius.circular(7)),
                     ),
                   ),
-                  SizedBox(height: 10),
+                  const SizedBox(height: 10),
                   GestureDetector(
                     onTap: () async {
                       DateTime? pickedDate = await showDatePicker(
@@ -139,12 +149,12 @@ class _PurchasesScreenState extends State<PurchasesScreen> {
                         children: [
                           Text(selectedDate,
                               style: TextStyle(color: Colors.white)),
-                          Icon(Icons.calendar_today, color: Colors.white),
+                          const Icon(Icons.calendar_today, color: Colors.white),
                         ],
                       ),
                     ),
                   ),
-                  SizedBox(height: 15),
+                  const SizedBox(height: 15),
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.redAccent,
@@ -157,7 +167,7 @@ class _PurchasesScreenState extends State<PurchasesScreen> {
                           distributorController.text.isEmpty ||
                           quantityController.text.isEmpty) {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text("All fields are required"),
+                          const SnackBar(content: Text("All fields are required"),
                               backgroundColor: Colors.red),
                         );
                         return;
@@ -176,11 +186,11 @@ class _PurchasesScreenState extends State<PurchasesScreen> {
                       Navigator.pop(context); // Close dialog
                       _fetchPurchases(); // Refresh list
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text("Purchase added successfully!"),
+                        const SnackBar(content: Text("Purchase added successfully!"),
                             backgroundColor: Colors.green),
                       );
                     },
-                    child: Text(
+                    child: const Text(
                         "Add Purchase", style: TextStyle(color: Colors.white)),
                   ),
                 ],
@@ -196,23 +206,50 @@ class _PurchasesScreenState extends State<PurchasesScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Purchases"),
+        title: _isSearching
+            ? TextField(
+          controller: _searchController,
+          autofocus: true,
+          decoration: const InputDecoration(
+            hintText: 'Search by product name...',
+            border: InputBorder.none,
+          ),
+          style: const TextStyle(color: Colors.white),
+          textInputAction: TextInputAction.search,
+          onSubmitted: (value) {
+            _fetchPurchases(query: value);
+          },
+        )
+            : const Text("Purchases"),
         actions: [
+          IconButton(
+            icon: Icon(_isSearching ? Icons.close : Icons.search),
+            onPressed: () {
+              setState(() {
+                if (_isSearching) {
+                  _searchController.clear();
+                  _fetchPurchases(); // Reset list
+                }
+                _isSearching = !_isSearching;
+              });
+            },
+          ),
           TextButton.icon(
             onPressed: _showAddPurchaseDialog,
-            icon: Icon(Icons.add, color: Colors.white),
-            label: Text("Add Purchase",
+            icon: const Icon(Icons.add, color: Colors.white),
+            label: const Text("Add Purchase",
                 style: TextStyle(color: Colors.white, fontSize: 16)),
           ),
         ],
       ),
+
       body: Column(
         children: [
           // Header Row for Titles
           Container(
             padding: EdgeInsets.symmetric(vertical: 10, horizontal: 15),
             color: Colors.grey[900], // Dark background for title row
-            child: Row(
+            child: const Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Expanded(child: Text("Product Name", style: TextStyle(
@@ -232,7 +269,7 @@ class _PurchasesScreenState extends State<PurchasesScreen> {
           // Purchases List
           Expanded(
             child: _purchases.isEmpty
-                ? Center(child: Text("No purchases available.",
+                ? const Center(child: Text("No purchases available.",
                 style: TextStyle(color: Colors.white)))
                 : ListView.builder(
               padding: EdgeInsets.all(10),

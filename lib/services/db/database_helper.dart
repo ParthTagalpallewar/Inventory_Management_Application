@@ -19,6 +19,8 @@ class DatabaseHelper {
     databaseFactory = databaseFactoryFfi;
 
     String path = join(await getDatabasesPath(), 'inventory.db');
+
+
     return await databaseFactory.openDatabase(
       path,
       options: OpenDatabaseOptions(
@@ -26,6 +28,10 @@ class DatabaseHelper {
         onCreate: _onCreate,
       ),
     );
+  }
+
+  Future<String> getDbPath() async{
+    return join(await getDatabasesPath(), 'inventory.db');
   }
 
   Future<void> _onCreate(Database db, int version) async {
@@ -56,6 +62,33 @@ class DatabaseHelper {
       FOREIGN KEY (product_id) REFERENCES products(product_id) ON DELETE CASCADE
     )
   ''');
+
+    await db.execute('''
+  CREATE TABLE selling_receipt_history (
+    receipt_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    customer_name TEXT NOT NULL,
+    customer_address TEXT NOT NULL,
+    mobile_number TEXT NOT NULL,
+    email_address TEXT NOT NULL,
+    gst_percentage REAL NOT NULL,
+    gstin_number TEXT,
+    date TEXT
+  )
+''');
+
+    await db.execute('''
+  CREATE TABLE selling_inventory_history (
+    selling_inventory_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    receipt_id INTEGER NOT NULL,
+    inventory_id INTEGER NOT NULL,
+    hsn_code TEXT,
+    selling_qty INTEGER NOT NULL,
+    selling_price REAL NOT NULL,
+    FOREIGN KEY (receipt_id) REFERENCES selling_receipt_history(receipt_id),
+    FOREIGN KEY (inventory_id) REFERENCES inventory(inventory_id)
+  )
+''');
+
   }
 
 }

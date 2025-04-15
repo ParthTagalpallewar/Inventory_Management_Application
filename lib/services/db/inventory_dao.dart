@@ -1,5 +1,10 @@
+import 'package:intl/intl.dart';
+import 'package:intl/intl.dart';
 import 'package:inventory_management_software/services/db/database_helper.dart';
+import 'package:inventory_management_software/services/model/receipt_model.dart';
+import 'package:inventory_management_software/services/model/recepit_inventory_model.dart';
 import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:intl/intl.dart';
 
 class InventoryDao {
   final DatabaseHelper _dbHelper = DatabaseHelper.instance;
@@ -40,6 +45,10 @@ class InventoryDao {
 
 
   //purchases
+  Future<String> getPath()async{
+    final db = await _dbHelper.getDbPath();
+    return db;
+  }
 
   Future<List<Map<String, dynamic>>> getPurchasesWithProductName() async {
     final db = await _dbHelper.database;
@@ -70,16 +79,7 @@ class InventoryDao {
     });
   }
 
-  /// ✅ 3. Get a purchase by ID
-  Future<Map<String, dynamic>?> getPurchaseById(int purchaseId) async {
-    final db = await _dbHelper.database;
-    List<Map<String, dynamic>> result = await db.query(
-      'purchases',
-      where: 'purchase_id = ?',
-      whereArgs: [purchaseId],
-    );
-    return result.isNotEmpty ? result.first : null;
-  }
+
 
   Future<void> addOrUpdateInventory({
     required int productId,
@@ -125,6 +125,153 @@ class InventoryDao {
       ORDER BY inventory.inventory_id DESC
     ''');
   }
+
+  Future<List<InventoryItem>> getInventoryItemList() async {
+    final Database db = await _dbHelper.database;
+    final List<Map<String, dynamic>> result = await db.rawQuery('''
+    SELECT 
+      inventory.inventory_id, 
+      inventory.product_id, 
+      products.product_name, 
+      inventory.quantity
+    FROM inventory
+    JOIN products ON inventory.product_id = products.product_id
+    ORDER BY inventory.inventory_id DESC
+  ''');
+
+    return result.map((map) => InventoryItem.fromMap(map)).toList();
+  }
+
+  Future<List<Map<String, dynamic>>> getPurchasesWithProductNameFiltered(String query) async {
+    final db = await _dbHelper.database;
+    return await db.rawQuery('''
+    SELECT purchases.*, products.product_name
+    FROM purchases
+    JOIN products ON purchases.product_id = products.product_id
+    WHERE products.product_name LIKE ?
+  ''', ['%$query%']);
+  }
+
+  Future<void> reduceInventoryQuantity(int inventoryId, int subQuantity) async {
+    final Database db = await _dbHelper.database;
+    await db.rawUpdate(
+      '''
+    UPDATE inventory 
+    SET quantity = quantity - ? 
+    WHERE inventory_id = ?
+    ''',
+      [subQuantity, inventoryId],
+    );
+  }
+
+  Future<int> addReceipt(
+      String customerName,
+      String customerAddress,
+      String mobileNumber,
+      String emailAddress,
+      String gstPercentage,
+      String? gstIn
+      ) async {
+    final Database db = await _dbHelper.database;
+
+    return await db.rawInsert(
+      '''
+    INSERT INTO selling_receipt_history (
+      customer_name,
+      customer_address,
+      mobile_number,
+      email_address,
+      gst_percentage,
+      gstin_number,
+      date
+    ) VALUES (?, ?, ?, ?, ?, ?, ?)
+    ''',
+      [
+        customerName,
+        customerAddress,
+        mobileNumber,
+        emailAddress,
+        double.parse(gstPercentage), // assuming it's passed as a string
+        gstIn,
+        DateFormat('dd-MM-yyyy').format(DateTime.now()).toString()
+      ],
+    );
+  }
+
+  Future<List<Receipt>> getAllReceipts() async {
+    final db = await _dbHelper.database;
+    final List<Map<String, dynamic>> result = await db.query('selling_receipt_history');
+    return result.map((map) => Receipt.fromMap(map)).toList();
+  }
+
+  Future<List<Receipt>> getReceiptsByCustomerName(String name) async {
+    final db = await _dbHelper.database;
+
+    final List<Map<String, dynamic>> result = await db.query(
+      'selling_receipt_history',
+      where: 'customer_name LIKE ?',
+      whereArgs: ['%$name%'],
+    );
+
+    return result.map((map) => Receipt.fromMap(map)).toList();
+  }
+
+
+
+  Future<void> addReceiptInventory(
+      int receiptId,
+      int inventoryId,
+      String? hsnCode,
+      int quantity,
+      int price,
+      ) async {
+    final Database db = await _dbHelper.database;
+
+    await db.rawInsert(
+      '''
+    INSERT INTO selling_inventory_history (
+      receipt_id,
+      inventory_id,
+      hsn_code,
+      selling_qty,
+      selling_price
+    ) VALUES (?, ?, ?, ?, ?)
+    ''',
+      [
+        receiptId,
+        inventoryId,
+        hsnCode,
+        quantity,
+        price,
+      ],
+    );
+  }
+
+  Future<List<InventoryItem>> getInventoryItemsByReceiptId(int receiptId) async {
+    final Database db = await _dbHelper.database;
+
+    final List<Map<String, dynamic>> result = await db.rawQuery(
+      '''
+    SELECT 
+      sih.inventory_id,
+      prod.product_name,
+      inv.quantity AS available_quantity,
+      sih.selling_qty AS selling_quantity,
+      sih.selling_price,
+      sih.hsn_code
+    FROM selling_inventory_history sih
+    JOIN inventory inv ON sih.inventory_id = inv.inventory_id
+    JOIN products prod ON inv.product_id = prod.product_id
+    WHERE sih.receipt_id = ?
+    ''',
+      [receiptId],
+    );
+
+    return result.map((map) => InventoryItem.secondFromMap(map)).toList();
+  }
+
+
+
 
 
 
