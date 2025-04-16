@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:get/get_common/get_reset.dart';
 import 'package:get/get_core/src/get_main.dart';
+import 'package:inventory_management_software/screens/app_drawer.dart';
 import 'package:inventory_management_software/services/db/inventory_dao.dart';
 import 'package:inventory_management_software/services/model/recepit_inventory_model.dart';
 import 'gst_screen.dart'; // the next screen to navigate to
@@ -69,6 +70,7 @@ class _SelectInventoryScreenState extends State<SelectInventoryScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      drawer: AppDrawer(),
       backgroundColor: Colors.black,
       appBar: AppBar(title: const Text('Select Inventory')),
       body: _isLoading

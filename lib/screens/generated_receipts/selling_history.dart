@@ -12,6 +12,7 @@ import 'dart:io';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:path_provider/path_provider.dart';
+import 'package:flutter/services.dart' show rootBundle;
 
 class ReceiptListScreen extends StatefulWidget {
   const ReceiptListScreen({Key? key}) : super(key: key);
@@ -218,6 +219,10 @@ class _ReceiptListScreenState extends State<ReceiptListScreen> {
       ) async {
 
     final pdf = pw.Document();
+    final imageBytes = await rootBundle.load('assets/app_logo.jpeg');
+    final logoImage = pw.MemoryImage(imageBytes.buffer.asUint8List());
+
+
 
     int sumAmountBeforeGST = 0;
 
@@ -278,30 +283,39 @@ class _ReceiptListScreenState extends State<ReceiptListScreen> {
             child: pw.Column(
               crossAxisAlignment: pw.CrossAxisAlignment.start,
               children: [
-                pw.Center(
-                  child: pw.Text(
-                    "PROFORMA INVOICE",
-                    style: pw.TextStyle(
-                      fontSize: 10,
-                      fontWeight: pw.FontWeight.bold,
-                      decoration: pw.TextDecoration.underline,
-                    ),
-                  ),
-                ),
-                pw.SizedBox(height: 1),
-                pw.Center(
-                  child: pw.Column(
+                pw.Row(
+                    crossAxisAlignment: pw.CrossAxisAlignment.start,
                     children: [
-                      pw.Text("OVI REFRIGERATION AND SOLAR", style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold)),
-                      pw.Text("15 A Bagade Layout, Pusad Road", style: defaultSmallTextStyle),
-                      pw.Text("Pusad, Yavatmal, Maharashtra, 445204", style: defaultSmallTextStyle),
-                      pw.Text("C/O-HARISH BHAGWAT TAGALPALLEWAR", style: defaultSmallTextStyle),
-                      pw.Text("CIN: U74994HR2018PTC077516 | PAN: AINPT2018G", style: defaultSmallTextStyle),
-                      pw.Text("GSTIN: 27AINPT2018G1Z4", style: defaultSmallTextStyle),
-                      pw.Text("Tel: 9881325407    Email: harish.Pusad@gmail.com", style: defaultSmallTextStyle),
-                    ],
-                  ),
+                      pw.Container(
+                        width: 100, // Set width/height as needed
+                        height: 100,
+                        child: pw.Image(logoImage),
+                      ),
+                      pw.SizedBox(width: 10),
+                      pw.Expanded(
+                          child: pw.Column(
+                              crossAxisAlignment: pw.CrossAxisAlignment.center,
+                              children: [
+                                pw.Text("PROFORMA INVOICE",
+                                    style: pw.TextStyle(
+                                      fontSize: 10,
+                                      fontWeight: pw.FontWeight.bold,
+                                      decoration: pw.TextDecoration.underline,
+                                    )),
+                                pw.SizedBox(height: 2),
+                                pw.Text("OVI REFRIGERATION AND SOLAR", style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold)),
+                                pw.Text("15 A Bagade Layout, Pusad Road", style: defaultSmallTextStyle),
+                                pw.Text("Pusad, Yavatmal, Maharashtra, 445204", style: defaultSmallTextStyle),
+                                pw.Text("C/O-HARISH BHAGWAT TAGALPALLEWAR", style: defaultSmallTextStyle),
+                                pw.Text("CIN: U74994HR2018PTC077516 | PAN: AINPT2018G", style: defaultSmallTextStyle),
+                                pw.Text("GSTIN: 27AINPT2018G1Z4", style: defaultSmallTextStyle),
+                                pw.Text("Tel: 9881325407    Email: harish.Pusad@gmail.com", style: defaultSmallTextStyle),
+                              ]
+                          )
+                      )
+                    ]
                 ),
+                
 
                 pw.Divider(thickness: 0.5),
 
